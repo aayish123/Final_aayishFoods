@@ -86,8 +86,7 @@ const FoodCard = ({ item }: FoodCardProps) => {
       <CardContent className="p-0">
         <div className="relative overflow-hidden rounded-t-lg">
           <img
-            src=<img src={`/${item.image_url.replace(/^public\//, '')}`} alt={item.name} />
-
+            src={`/${item.image_url.replace(/^public\//, '')}`} alt={item.name} 
 {/*             alt={item.name} */}
             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
           />

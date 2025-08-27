@@ -18,7 +18,7 @@ const SocialIcons = () => {
     // WhatsApp link dummy, change 1234567890 to your business number in international format, no "+".
     { 
       icon: MessageCircle, 
-      href: 'https://wa.me/6304541250', 
+      href: 'https://wa.me/911234567890', 
       label: 'WhatsApp', 
       color: 'hover:text-green-600' 
     },

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Eye, Package, Truck, CheckCircle, Users, ShoppingBag, TrendingUp, LogOut, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
+import { Eye, Package, Truck, CheckCircle, Users, ShoppingBag, TrendingUp, LogOut, Plus, Edit, Trash2, RefreshCw, Settings } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -51,10 +51,18 @@ interface FoodItem {
   image_url: string;
 }
 
+interface FoodItemVariant {
+  id: string;
+  food_item_id: string;
+  label: string;
+  price: number;
+}
+
 const Admin = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [variants, setVariants] = useState<FoodItemVariant[]>([]);
   const [stats, setStats] = useState({
     totalOrders: 0,
     ongoingOrders: 0,
@@ -74,10 +82,20 @@ const Admin = () => {
     category: '',
     image_url: ''
   });
+  
+  // Variants management state
+  const [isAddVariantDialogOpen, setIsAddVariantDialogOpen] = useState(false);
+  const [editingVariant, setEditingVariant] = useState<FoodItemVariant | null>(null);
+  const [selectedFoodItemForVariants, setSelectedFoodItemForVariants] = useState<FoodItem | null>(null);
+  const [newVariant, setNewVariant] = useState({
+    label: '',
+    price: ''
+  });
 
   useEffect(() => {
     fetchOrders();
     fetchFoodItems();
+    fetchVariants();
     fetchStats();
     
     // Set up real-time subscription for ALL orders (not just admin orders)
@@ -130,9 +148,27 @@ const Admin = () => {
       )
       .subscribe();
 
+    // Set up real-time subscription for variants
+    const variantsChannel = supabase
+      .channel('admin-variants-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'food_item_variants'
+        },
+        (payload) => {
+          console.log('Variant change detected:', payload);
+          fetchVariants();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(ordersChannel);
       supabase.removeChannel(foodItemsChannel);
+      supabase.removeChannel(variantsChannel);
     };
   }, []);
 
@@ -203,6 +239,27 @@ const Admin = () => {
     } catch (error) {
       console.error('Error fetching food items:', error);
       toast.error('Failed to fetch food items');
+    }
+  };
+
+  const fetchVariants = async () => {
+    try {
+      console.log('Fetching variants...');
+      const { data, error } = await supabase
+        .from('food_item_variants')
+        .select('*')
+        .order('price', { ascending: true });
+
+      if (error) {
+        console.error('Variants fetch error:', error);
+        throw error;
+      }
+
+      console.log('Variants fetched:', data?.length || 0);
+      setVariants(data || []);
+    } catch (error) {
+      console.error('Error fetching variants:', error);
+      toast.error('Failed to fetch variants');
     }
   };
 
@@ -406,6 +463,104 @@ const Admin = () => {
     }
   };
 
+  // Variants management functions
+  const handleAddVariant = async () => {
+    if (!selectedFoodItemForVariants || !newVariant.label || !newVariant.price) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      console.log('Adding new variant:', newVariant);
+      const { error } = await supabase
+        .from('food_item_variants')
+        .insert({
+          food_item_id: selectedFoodItemForVariants.id,
+          label: newVariant.label,
+          price: parseFloat(newVariant.price)
+        });
+
+      if (error) {
+        console.error('Add variant error:', error);
+        throw error;
+      }
+
+      console.log('Variant added successfully');
+      toast.success('Variant added successfully');
+      setIsAddVariantDialogOpen(false);
+      setNewVariant({ label: '', price: '' });
+      
+      // Refresh variants data
+      await fetchVariants();
+    } catch (error) {
+      console.error('Error adding variant:', error);
+      toast.error('Failed to add variant');
+    }
+  };
+
+  const handleEditVariant = async () => {
+    if (!editingVariant || !editingVariant.label || !editingVariant.price) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      console.log('Updating variant:', editingVariant);
+      const { error } = await supabase
+        .from('food_item_variants')
+        .update({
+          label: editingVariant.label,
+          price: editingVariant.price
+        })
+        .eq('id', editingVariant.id);
+
+      if (error) {
+        console.error('Edit variant error:', error);
+        throw error;
+      }
+
+      console.log('Variant updated successfully');
+      toast.success('Variant updated successfully');
+      setEditingVariant(null);
+      
+      // Refresh variants data
+      await fetchVariants();
+    } catch (error) {
+      console.error('Error updating variant:', error);
+      toast.error('Failed to update variant');
+    }
+  };
+
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!confirm('Are you sure you want to delete this variant?')) return;
+
+    try {
+      console.log('Deleting variant:', variantId);
+      const { error } = await supabase
+        .from('food_item_variants')
+        .delete()
+        .eq('id', variantId);
+
+      if (error) {
+        console.error('Delete variant error:', error);
+        throw error;
+      }
+
+      console.log('Variant deleted successfully');
+      toast.success('Variant deleted successfully');
+      
+      // Refresh variants data
+      await fetchVariants();
+    } catch (error) {
+      console.error('Error deleting variant:', error);
+      toast.error('Failed to delete variant');
+    }
+  };
+
+  const getVariantsForItem = (foodItemId: string) => {
+    return variants.filter(variant => variant.food_item_id === foodItemId);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
@@ -438,6 +593,7 @@ const Admin = () => {
   const handleRefresh = async () => {
     await fetchOrders();
     await fetchFoodItems();
+    await fetchVariants();
     await fetchStats();
     toast.success('Data refreshed successfully');
   };
@@ -458,7 +614,7 @@ const Admin = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="text-gray-600 mt-1">Welcome to AAYISH Admin Panel</p>
           </div>
-          {/* <div className="flex gap-2">
+          <div className="flex gap-2">
             <Button 
               variant="outline" 
               onClick={handleRefresh}
@@ -472,7 +628,7 @@ const Admin = () => {
               <LogOut className="h-4 w-4" />
               Logout
             </Button>
-          </div> */}
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -779,121 +935,265 @@ const Admin = () => {
                       <p>No food items found</p>
                     </div>
                   ) : (
-                    foodItems.map((item) => (
-                      <div key={item.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <img
-                          src={item.image_url || '/placeholder.svg'}
-                          alt={item.name}
-                          className="w-full h-32 object-cover rounded mb-3"
-                        />
-                        <h3 className="font-semibold text-sm sm:text-base">{item.name}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
-                        <p className="text-orange-600 font-medium mb-2">₹{item.price}</p>
-                        {item.category && (
-                          <p className="text-xs sm:text-sm text-gray-500 mb-3">Category: {item.category}</p>
-                        )}
-                        
-                        <div className="flex items-center justify-between mb-3">
-                          <Badge className={item.in_stock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                            {item.in_stock ? 'In Stock' : 'Out of Stock'}
-                          </Badge>
+                    foodItems.map((item) => {
+                      const itemVariants = getVariantsForItem(item.id);
+                      return (
+                        <div key={item.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <img
+                            src={item.image_url || '/placeholder.svg'}
+                            alt={item.name}
+                            className="w-full h-32 object-cover rounded mb-3"
+                          />
+                          <h3 className="font-semibold text-sm sm:text-base">{item.name}</h3>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                          <p className="text-orange-600 font-medium mb-2">₹{item.price}</p>
+                          {item.category && (
+                            <p className="text-xs sm:text-sm text-gray-500 mb-3">Category: {item.category}</p>
+                          )}
+                          
+                          {/* Variants Display */}
+                          {itemVariants.length > 0 && (
+                            <div className="mb-3">
+                              <p className="text-xs font-medium text-gray-700 mb-2">Variants:</p>
+                              <div className="space-y-1">
+                                {itemVariants.map((variant) => (
+                                  <div key={variant.id} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
+                                    <span className="text-gray-600">{variant.label}</span>
+                                    <span className="font-medium text-orange-600">₹{variant.price}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between mb-3">
+                            <Badge className={item.in_stock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                              {item.in_stock ? 'In Stock' : 'Out of Stock'}
+                            </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => toggleFoodItemStock(item.id, item.in_stock)}
+                              className="text-xs"
+                            >
+                              {item.in_stock ? 'Mark Out' : 'Mark Available'}
+                            </Button>
+                          </div>
+                          
+                          <div className="flex gap-2 mb-2">
+                            <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setEditingItem(item)}
+                                  className="flex-1 text-xs"
+                                >
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  Edit
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                  <DialogTitle>Edit Food Item</DialogTitle>
+                                </DialogHeader>
+                                {editingItem && (
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label htmlFor="edit-name">Name *</Label>
+                                      <Input
+                                        id="edit-name"
+                                        value={editingItem.name}
+                                        onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-description">Description</Label>
+                                      <Textarea
+                                        id="edit-description"
+                                        value={editingItem.description}
+                                        onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-price">Price *</Label>
+                                      <Input
+                                        id="edit-price"
+                                        type="number"
+                                        step="0.01"
+                                        value={editingItem.price}
+                                        onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) })}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-category">Category</Label>
+                                      <Input
+                                        id="edit-category"
+                                        value={editingItem.category}
+                                        onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label htmlFor="edit-image_url">Image URL</Label>
+                                      <Input
+                                        id="edit-image_url"
+                                        value={editingItem.image_url}
+                                        onChange={(e) => setEditingItem({ ...editingItem, image_url: e.target.value })}
+                                      />
+                                    </div>
+                                    <Button onClick={handleEditItem} className="w-full">
+                                      Update Item
+                                    </Button>
+                                  </div>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                            
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteItem(item.id)}
+                              className="flex-1 text-xs"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                          
+                          {/* Variants Management Button */}
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => toggleFoodItemStock(item.id, item.in_stock)}
-                            className="text-xs"
+                            onClick={() => {
+                              setSelectedFoodItemForVariants(item);
+                              setIsAddVariantDialogOpen(true);
+                            }}
+                            className="w-full text-xs"
                           >
-                            {item.in_stock ? 'Mark Out' : 'Mark Available'}
+                            <Settings className="h-3 w-3 mr-1" />
+                            Manage Variants
                           </Button>
                         </div>
-                        
-                        <div className="flex gap-2">
-                          <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEditingItem(item)}
-                                className="flex-1 text-xs"
-                              >
-                                <Edit className="h-3 w-3 mr-1" />
-                                Edit
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md">
-                              <DialogHeader>
-                                <DialogTitle>Edit Food Item</DialogTitle>
-                              </DialogHeader>
-                              {editingItem && (
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label htmlFor="edit-name">Name *</Label>
-                                    <Input
-                                      id="edit-name"
-                                      value={editingItem.name}
-                                      onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="edit-description">Description</Label>
-                                    <Textarea
-                                      id="edit-description"
-                                      value={editingItem.description}
-                                      onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="edit-price">Price *</Label>
-                                    <Input
-                                      id="edit-price"
-                                      type="number"
-                                      step="0.01"
-                                      value={editingItem.price}
-                                      onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) })}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="edit-category">Category</Label>
-                                    <Input
-                                      id="edit-category"
-                                      value={editingItem.category}
-                                      onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="edit-image_url">Image URL</Label>
-                                    <Input
-                                      id="edit-image_url"
-                                      value={editingItem.image_url}
-                                      onChange={(e) => setEditingItem({ ...editingItem, image_url: e.target.value })}
-                                    />
-                                  </div>
-                                  <Button onClick={handleEditItem} className="w-full">
-                                    Update Item
-                                  </Button>
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
-                          
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="flex-1 text-xs"
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
+
+        {/* Add Variant Dialog */}
+        <Dialog open={isAddVariantDialogOpen} onOpenChange={setIsAddVariantDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                Manage Variants for {selectedFoodItemForVariants?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Add, edit, or remove variants for this food item
+              </DialogDescription>
+            </DialogHeader>
+            
+            {/* Add New Variant Form */}
+            <div className="space-y-4 border-b pb-4">
+              <h4 className="font-medium">Add New Variant</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="variant-label">Label</Label>
+                  <Input
+                    id="variant-label"
+                    value={newVariant.label}
+                    onChange={(e) => setNewVariant({ ...newVariant, label: e.target.value })}
+                    placeholder="e.g., 250g, 500g"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="variant-price">Price</Label>
+                  <Input
+                    id="variant-price"
+                    type="number"
+                    step="0.01"
+                    value={newVariant.price}
+                    onChange={(e) => setNewVariant({ ...newVariant, price: e.target.value })}
+                    placeholder="Price in ₹"
+                  />
+                </div>
+              </div>
+              <Button onClick={handleAddVariant} className="w-full">
+                Add Variant
+              </Button>
+            </div>
+            
+            {/* Existing Variants List */}
+            <div className="space-y-3">
+              <h4 className="font-medium">Existing Variants</h4>
+              {selectedFoodItemForVariants && getVariantsForItem(selectedFoodItemForVariants.id).length === 0 ? (
+                <p className="text-gray-500 text-sm text-center py-4">No variants added yet</p>
+              ) : (
+                selectedFoodItemForVariants && getVariantsForItem(selectedFoodItemForVariants.id).map((variant) => (
+                  <div key={variant.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <p className="font-medium">{variant.label}</p>
+                      <p className="text-sm text-orange-600">₹{variant.price}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Dialog open={editingVariant?.id === variant.id} onOpenChange={(open) => !open && setEditingVariant(null)}>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingVariant(variant)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-sm">
+                          <DialogHeader>
+                            <DialogTitle>Edit Variant</DialogTitle>
+                          </DialogHeader>
+                          {editingVariant && (
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="edit-variant-label">Label</Label>
+                                <Input
+                                  id="edit-variant-label"
+                                  value={editingVariant.label}
+                                  onChange={(e) => setEditingVariant({ ...editingVariant, label: e.target.value })}
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="edit-variant-price">Price</Label>
+                                <Input
+                                  id="edit-variant-price"
+                                  type="number"
+                                  step="0.01"
+                                  value={editingVariant.price}
+                                  onChange={(e) => setEditingVariant({ ...editingVariant, price: parseFloat(e.target.value) })}
+                                />
+                              </div>
+                              <Button onClick={handleEditVariant} className="w-full">
+                                Update Variant
+                              </Button>
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                      
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteVariant(variant.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

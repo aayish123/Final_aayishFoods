@@ -40,12 +40,11 @@ Here's a complete email template you can use:
 ### 5. Set Site URL
 Make sure your **Site URL** is configured correctly in:
 - **Authentication** → **URL Configuration** → **Site URL**
-- Set it to: `http://localhost:5173` (for development) or your production domain
+- Set it to: `https://www.aayishfoods.online` (for production)
 
 ### 6. Add Redirect URLs
 In **Authentication** → **URL Configuration** → **Redirect URLs**, add:
-- `http://localhost:5173/reset-password`
-- Your production URL + `/reset-password`
+- `https://www.aayishfoods.online/reset-password`
 
 ## How It Works After Configuration:
 

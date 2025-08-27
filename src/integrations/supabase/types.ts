@@ -186,6 +186,8 @@ export type Database = {
           phone: string | null
           updated_at: string
           role: string // 'user' or 'admin'
+          avatar_url: string | null
+          provider: string | null
         }
         Insert: {
           created_at?: string
@@ -194,6 +196,8 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           role?: string // default 'user'
+          avatar_url?: string | null
+          provider?: string | null
         }
         Update: {
           created_at?: string
@@ -202,6 +206,8 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           role?: string
+          avatar_url?: string | null
+          provider?: string | null
         }
         Relationships: []
       }

@@ -9,6 +9,7 @@ interface AuthContextType {
   role: string | null;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
@@ -105,10 +106,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'https://www.aayishfoods.online/auth'
+        }
+      });
+      if (error) {
+        return { error };
+      }
+      return { error: null };
+    } catch (error) {
+      return { error };
+    }
+  };
+
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password?mode=reset`
+        redirectTo: 'https://www.aayishfoods.online/reset-password'
       });
       if (error) {
         return { error };
@@ -138,6 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     role,
     signUp,
     signIn,
+    signInWithGoogle,
     resetPassword,
     signOut
   };

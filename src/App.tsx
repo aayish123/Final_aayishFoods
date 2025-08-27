@@ -12,6 +12,7 @@ import AuthModal from "@/components/AuthModal";
 
 import Landing from "@/pages/Landing";
 import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
 
 import Menu from "@/pages/Menu";
 import Dashboard from "@/pages/Dashboard";
@@ -75,7 +76,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<Landing />} />
                   <Route path="/auth" element={<Auth />} />
-                  {/* <Route path="/reset-password" element={<PasswordReset />} /> */}
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
                   <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />

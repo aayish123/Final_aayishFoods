@@ -9,28 +9,35 @@ ADD COLUMN IF NOT EXISTS provider TEXT DEFAULT 'email';
 -- Create index for better performance
 CREATE INDEX IF NOT EXISTS idx_profiles_provider ON public.profiles(provider);
 
--- Update RLS policies to allow OAuth users
--- Allow users to create profiles from OAuth (Google)
-CREATE POLICY IF NOT EXISTS "Users can create profile from OAuth" ON public.profiles
+-- Drop existing policies if they exist (to avoid conflicts)
+DROP POLICY IF EXISTS "Users can create profile from OAuth" ON public.profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Admins can update all profiles" ON public.profiles;
+
+-- Create new RLS policies for OAuth users
+-- Allow users to create profile from OAuth (Google)
+CREATE POLICY "Users can create profile from OAuth" ON public.profiles
   FOR INSERT WITH CHECK (
     auth.uid() = id OR 
     (auth.jwt() ->> 'provider' = 'google' AND auth.uid() = id)
   );
 
 -- Allow users to update their own profile (including OAuth users)
-CREATE POLICY IF NOT EXISTS "Users can update own profile" ON public.profiles
+CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (
     auth.uid() = id
   );
 
 -- Allow users to view their own profile (including OAuth users)
-CREATE POLICY IF NOT EXISTS "Users can view own profile" ON public.profiles
+CREATE POLICY "Users can view own profile" ON public.profiles
   FOR SELECT USING (
     auth.uid() = id
   );
 
 -- Allow admins to view all profiles
-CREATE POLICY IF NOT EXISTS "Admins can view all profiles" ON public.profiles
+CREATE POLICY "Admins can view all profiles" ON public.profiles
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.profiles 
@@ -40,7 +47,7 @@ CREATE POLICY IF NOT EXISTS "Admins can view all profiles" ON public.profiles
   );
 
 -- Allow admins to update all profiles
-CREATE POLICY IF NOT EXISTS "Admins can update all profiles" ON public.profiles
+CREATE POLICY "Admins can update all profiles" ON public.profiles
   FOR UPDATE USING (
     EXISTS (
       SELECT 1 FROM public.profiles 

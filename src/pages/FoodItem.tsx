@@ -124,7 +124,18 @@ const FoodItem = () => {
     updateQuantity(item.id, newQuantity, selectedVariantId);
   };
 
-  // Generate structured data for individual food item
+  // Generate SEO-friendly slug
+  const generateSlug = (name: string) => {
+    return name.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  const itemSlug = generateSlug(item.name);
+
+  // Generate comprehensive structured data for individual food item
   const foodItemStructuredData = {
     "@context": "https://schema.org",
     "@type": "MenuItem",
@@ -132,6 +143,8 @@ const FoodItem = () => {
     "description": item.description || `Delicious ${item.name} from AAYISH Foods`,
     "image": item.image_url || "https://www.aayishfoods.online/placeholder.svg",
     "category": item.category || "Indian Food",
+    "url": `https://www.aayishfoods.online/food/${itemSlug}`,
+    "identifier": item.id,
     "offers": {
       "@type": "Offer",
       "price": selectedVariant.price,
@@ -139,12 +152,24 @@ const FoodItem = () => {
       "availability": item.in_stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "seller": {
         "@type": "Restaurant",
-        "name": "AAYISH Foods"
-      }
+        "name": "AAYISH Foods",
+        "url": "https://www.aayishfoods.online",
+        "telephone": "+91-XXXXXXXXXX",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "IN"
+        }
+      },
+      "validFrom": new Date().toISOString().split('T')[0]
     },
     "nutrition": {
       "@type": "NutritionInformation",
       "description": "Authentic Indian food made with traditional recipes"
+    },
+    "keywords": `${item.name}, ${item.name} online, ${item.name} delivery, ${item.category || 'Indian food'}, authentic Indian ${item.category || 'food'}, ${item.name} recipe, order ${item.name}, ${item.name} price, Indian food delivery, AAYISH Foods`,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://www.aayishfoods.online/food/${itemSlug}`
     }
   };
 

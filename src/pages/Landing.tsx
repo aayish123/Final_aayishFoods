@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import FoodCard from '@/components/FoodCard';
 import SocialIcons from '@/components/SocialIcons';
 import SEOHead from '@/components/SEOHead';
+import FAQ from '@/components/FAQ';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthModal } from '@/contexts/AuthModalContext';
@@ -121,8 +122,11 @@ const Landing = () => {
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
             Welcome to <span className="text-yellow-300">AAYISH</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl mb-4 max-w-2xl mx-auto">
             Authentic Indian food delivered fresh to your doorstep. Perfect for hostel students, working professionals, and food lovers.
+          </p>
+          <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto opacity-90">
+            Order delicious chicken pickle, mango pickle, gongura pickle, tomato pickle, lemon pickle, and traditional Indian delicacies online. Fast delivery across India with premium quality ingredients.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/menu">
@@ -223,6 +227,60 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* SEO Content Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            Premium Indian Food Delivery - AAYISH Foods
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">
+                Authentic Indian Pickles & Traditional Delicacies
+              </h3>
+              <div className="space-y-4 text-gray-700">
+                <p>
+                  At AAYISH Foods, we specialize in delivering the finest <strong>chicken pickle</strong>, 
+                  <strong>mango pickle</strong>, <strong>gongura pickle</strong>, and <strong>tomato pickle</strong> 
+                  straight to your doorstep. Our traditional recipes have been passed down through generations, 
+                  ensuring every bite brings you the authentic taste of India.
+                </p>
+                <p>
+                  Whether you're a <strong>hostel student</strong> craving home-cooked meals or a 
+                  <strong>working professional</strong> looking for quick, delicious food delivery, 
+                  AAYISH Foods has got you covered. We offer <strong>fast delivery</strong> across India 
+                  with premium quality ingredients and traditional cooking methods.
+                </p>
+                <p>
+                  Our menu features a wide variety of <strong>Indian pickles</strong> including 
+                  <strong>lemon pickle</strong>, <strong>pandu mirchi pickle</strong>, and 
+                  <strong>bitter gourd pickle</strong>. Each item is carefully prepared using 
+                  traditional recipes and premium ingredients to ensure the best taste and quality.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                <h4 className="font-semibold text-lg mb-2">Chicken Pickle</h4>
+                <p className="text-sm text-gray-600">Spicy and tangy traditional chicken pickle</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                <h4 className="font-semibold text-lg mb-2">Mango Pickle</h4>
+                <p className="text-sm text-gray-600">Sweet and sour mango pickle with spices</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                <h4 className="font-semibold text-lg mb-2">Gongura Pickle</h4>
+                <p className="text-sm text-gray-600">Tangy gongura leaves pickle</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                <h4 className="font-semibold text-lg mb-2">Tomato Pickle</h4>
+                <p className="text-sm text-gray-600">Spicy tomato pickle with traditional spices</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -266,6 +324,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQ />
     </div>
   );
 };

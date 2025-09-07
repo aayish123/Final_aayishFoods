@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://www.aayishfoods.online/auth'
+          redirectTo: 'https://www.aayishfoods.online/'
         }
       });
       if (error) {

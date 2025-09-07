@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthModalProvider } from "@/contexts/AuthModalContext";
@@ -13,8 +14,8 @@ import AuthModal from "@/components/AuthModal";
 import Landing from "@/pages/Landing";
 import Auth from "@/pages/Auth";
 import ResetPassword from "@/pages/ResetPassword";
-
 import Menu from "@/pages/Menu";
+import FoodItem from "@/pages/FoodItem";
 import Dashboard from "@/pages/Dashboard";
 import Cart from "@/pages/Cart";
 import Address from "@/pages/Address";
@@ -30,13 +31,13 @@ const queryClient = new QueryClient();
 // RequireAuth: Only allow authenticated users
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
-  const { openAuthModal } = useAuthModal();
+  const { openAuthModal, isGoogleOAuthInProgress } = useAuthModal();
   const location = useLocation();
   
   if (loading) return null;
   
-  if (!user) {
-    // Open auth modal instead of navigating
+  if (!user && !isGoogleOAuthInProgress) {
+    // Open auth modal instead of navigating, but not during Google OAuth
     openAuthModal();
     return null;
   }
@@ -67,33 +68,36 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AuthModalProvider>
-            <CartProvider>
-              <div className="min-h-screen bg-white">
-                <Header />
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/menu" element={<Menu />} />
-                  <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-                  <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />
-                  <Route path="/address" element={<RequireAuth><Address /></RequireAuth>} />
-                  <Route path="/payment" element={<RequireAuth><Payment /></RequireAuth>} />
-                  <Route path="/orders" element={<RequireAuth><Orders /></RequireAuth>} />
-                  <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <AuthModal />
-                {/* <PasswordResetModal /> */}
-              </div>
-            </CartProvider>
-          </AuthModalProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <HelmetProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <AuthModalProvider>
+              <CartProvider>
+                <div className="min-h-screen bg-white">
+                  <Header />
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/menu" element={<Menu />} />
+                    <Route path="/food/:id" element={<FoodItem />} />
+                    <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+                    <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />
+                    <Route path="/address" element={<RequireAuth><Address /></RequireAuth>} />
+                    <Route path="/payment" element={<RequireAuth><Payment /></RequireAuth>} />
+                    <Route path="/orders" element={<RequireAuth><Orders /></RequireAuth>} />
+                    <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <AuthModal />
+                  {/* <PasswordResetModal /> */}
+                </div>
+              </CartProvider>
+            </AuthModalProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </HelmetProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

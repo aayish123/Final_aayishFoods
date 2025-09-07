@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthModal } from '@/contexts/AuthModalContext';
 import { toast } from 'sonner';
+import { Mail, Lock } from 'lucide-react';
 
 type AuthMode = 'signin' | 'signup' | 'forgot';
 
@@ -19,25 +20,41 @@ const AuthModal = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn, signUp, resetPassword, signInWithGoogle, role, user } = useAuth();
-  const { isAuthModalOpen, closeAuthModal } = useAuthModal();
+  const { isAuthModalOpen, closeAuthModal, setGoogleOAuthInProgress } = useAuthModal();
   const [pendingRedirect, setPendingRedirect] = useState(false);
   const navigate = useNavigate();
 
+  // Reset OAuth progress state when user is authenticated
+  useEffect(() => {
+    if (user && setGoogleOAuthInProgress) {
+      setGoogleOAuthInProgress(false);
+    }
+  }, [user, setGoogleOAuthInProgress]);
+
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
+    setGoogleOAuthInProgress(true);
     try {
       const { error } = await signInWithGoogle();
       if (error) {
         toast.error('Google sign-in failed. Please try again.');
+        setGoogleLoading(false);
+        setGoogleOAuthInProgress(false);
       } else {
         toast.success('Redirecting to Google...');
+        // Close modal immediately when Google OAuth redirect starts
+        closeAuthModal();
+        // Set a timeout to reset OAuth state in case redirect fails
+        setTimeout(() => {
+          setGoogleOAuthInProgress(false);
+        }, 30000); // 30 seconds timeout
         // Google OAuth will redirect, so we don't need to handle success here
       }
     } catch (error) {
       toast.error('An unexpected error occurred during Google sign-in');
       console.error('Google sign-in error:', error);
-    } finally {
       setGoogleLoading(false);
+      setGoogleOAuthInProgress(false);
     }
   };
 
@@ -198,27 +215,45 @@ const AuthModal = () => {
           
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="pl-10"
+              />
+            </div>
           </div>
           
           {mode !== 'forgot' && (
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-               
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              {mode === 'signin' && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => setMode('forgot')}
+                    className="text-sm text-orange-600 hover:text-orange-700 hover:underline transition-colors"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+              )}
             </div>
           )}
           
@@ -252,6 +287,7 @@ const AuthModal = () => {
                 ) : (
                   <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
                     <path
+                    
                       fill="currentColor"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     />
@@ -302,17 +338,6 @@ const AuthModal = () => {
             </p>
           )}
           
-          {mode === 'signin' && (
-            <p className="text-sm text-gray-600">
-              {/* <button
-                type="button"
-                onClick={() => setMode('forgot')}
-                className="text-orange-600 hover:underline font-medium"
-              >
-                Forgot your password?
-              </button> */}
-            </p>
-          )}
           
           {mode === 'forgot' && (
             <p className="text-sm text-gray-600">

@@ -7,6 +7,8 @@ interface AuthModalContextType {
   isPasswordResetModalOpen: boolean;
   openPasswordResetModal: () => void;
   closePasswordResetModal: () => void;
+  isGoogleOAuthInProgress: boolean;
+  setGoogleOAuthInProgress: (inProgress: boolean) => void;
 }
 
 const AuthModalContext = createContext<AuthModalContextType | undefined>(undefined);
@@ -22,11 +24,13 @@ export const useAuthModal = () => {
 export const AuthModalProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isPasswordResetModalOpen, setIsPasswordResetModalOpen] = useState(false);
+  const [isGoogleOAuthInProgress, setIsGoogleOAuthInProgress] = useState(false);
 
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
   const openPasswordResetModal = () => setIsPasswordResetModalOpen(true);
   const closePasswordResetModal = () => setIsPasswordResetModalOpen(false);
+  const setGoogleOAuthInProgress = (inProgress: boolean) => setIsGoogleOAuthInProgress(inProgress);
 
   const value = {
     isAuthModalOpen,
@@ -34,7 +38,9 @@ export const AuthModalProvider = ({ children }: { children: React.ReactNode }) =
     closeAuthModal,
     isPasswordResetModalOpen,
     openPasswordResetModal,
-    closePasswordResetModal
+    closePasswordResetModal,
+    isGoogleOAuthInProgress,
+    setGoogleOAuthInProgress
   };
 
   return (

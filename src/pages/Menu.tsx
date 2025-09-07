@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import FoodCard from '@/components/FoodCard';
 import SocialIcons from '@/components/SocialIcons';
 import ComingSoon from '@/components/ComingSoon';
+import SEOHead from '@/components/SEOHead';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
@@ -128,8 +129,43 @@ const Menu = () => {
     setFilteredItems(filtered);
   };
 
+  // Generate structured data for menu
+  const menuStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Menu",
+    "name": "AAYISH Foods Menu",
+    "description": "Complete menu of authentic Indian food including pickles, curries, and traditional delicacies",
+    "url": "https://www.aayishfoods.online/menu",
+    "hasMenuSection": categories.filter(cat => cat !== 'All').map(category => ({
+      "@type": "MenuSection",
+      "name": category,
+      "description": `Authentic Indian ${category.toLowerCase()} items`,
+      "hasMenuItem": filteredItems
+        .filter(item => item.category === category)
+        .map(item => ({
+          "@type": "MenuItem",
+          "name": item.name,
+          "description": item.description || `Delicious ${item.name}`,
+          "image": item.image_url || "https://www.aayishfoods.online/placeholder.svg",
+          "offers": {
+            "@type": "Offer",
+            "price": item.variants[0]?.price || 0,
+            "priceCurrency": "INR",
+            "availability": item.in_stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+          }
+        }))
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title="Indian Food Menu - Chicken Curry, Mango Pickle, Gongura Pickle | AAYISH Foods"
+        description="Browse our complete menu of authentic Indian food. Order chicken curry, mango pickle, gongura pickle, tomato pickle, lemon pickle, and traditional Indian delicacies online. Fast delivery across India."
+        keywords="Indian food menu, chicken curry menu, mango pickle menu, gongura pickle menu, tomato pickle menu, Indian pickles menu, traditional Indian food menu, authentic Indian cuisine menu, food delivery menu, online food ordering menu, Indian delicacies menu, homemade pickles menu, chicken pickle menu, lemon pickle menu, pandu mirchi pickle menu, bitter gourd pickle menu"
+        url="https://www.aayishfoods.online/menu"
+        structuredData={menuStructuredData}
+      />
       <SocialIcons />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

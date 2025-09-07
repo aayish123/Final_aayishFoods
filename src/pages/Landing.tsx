@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import FoodCard from '@/components/FoodCard';
 import SocialIcons from '@/components/SocialIcons';
+import SEOHead from '@/components/SEOHead';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthModal } from '@/contexts/AuthModalContext';
@@ -76,8 +77,41 @@ const Landing = () => {
     (item.category && item.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Generate structured data for featured items
+  const featuredStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Featured Indian Food Items",
+    "description": "Popular and featured authentic Indian food items available for delivery",
+    "url": "https://www.aayishfoods.online/",
+    "numberOfItems": featuredItems.length,
+    "itemListElement": featuredItems.map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "MenuItem",
+        "name": item.name,
+        "description": item.description || `Delicious ${item.name}`,
+        "image": item.image_url || "https://www.aayishfoods.online/placeholder.svg",
+        "offers": {
+          "@type": "Offer",
+          "price": item.variants[0]?.price || item.price,
+          "priceCurrency": "INR",
+          "availability": item.in_stock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+        }
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      <SEOHead
+        title="AAYISH Foods - Authentic Indian Pickles, Chicken Curry & Traditional Delicacies Online"
+        description="Order authentic Indian food online! Fresh chicken curry, mango pickle, gongura pickle, tomato pickle, and traditional Indian delicacies. Fast delivery across India. Perfect for hostel students and working professionals."
+        keywords="Indian food delivery, chicken curry online, mango pickle, gongura pickle, tomato pickle, Indian pickles, traditional Indian food, authentic Indian cuisine, food delivery, online food ordering, Indian delicacies, homemade pickles, chicken pickle, lemon pickle, pandu mirchi pickle, bitter gourd pickle, hostel food delivery, working professional food delivery"
+        url="https://www.aayishfoods.online/"
+        structuredData={featuredStructuredData}
+      />
       <SocialIcons />
       
       {/* Hero Section */}

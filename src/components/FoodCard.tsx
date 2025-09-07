@@ -82,14 +82,16 @@ const FoodCard = ({ item }: FoodCardProps) => {
       className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
         isAnimating ? 'animate-pulse scale-105' : ''
       } ${!item.in_stock ? 'opacity-60' : ''}`}
+      onClick={() => navigate(`/food/${item.id}`)}
     >
       <CardContent className="p-0">
         <div className="relative overflow-hidden rounded-t-lg">
           <img
-           src={item.image_url?.replace(/^public\//, '')}
- 
-            alt={item.name}
+            src={item.image_url?.replace(/^public\//, '')}
+            alt={`${item.name} - Authentic Indian ${item.category || 'food'} from AAYISH Foods`}
+            title={`Order ${item.name} online - Fresh and authentic Indian ${item.category || 'food'}`}
             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
           />
           {!item.in_stock && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">

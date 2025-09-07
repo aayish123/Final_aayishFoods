@@ -12,3 +12,16 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://www.aayishfoods.online/sitemap.xml
+
+# Disallow admin and private pages
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /cart
+Disallow: /orders
+Disallow: /address
+Disallow: /payment
+Disallow: /auth
+Disallow: /reset-password

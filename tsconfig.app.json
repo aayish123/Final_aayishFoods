@@ -26,5 +26,17 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/routes",
+    "src/router.tsx",
+    "src/routeTree.gen.ts",
+    "src/server.ts",
+    "src/start.ts",
+    "src/components/Navbar.tsx",
+    "src/components/ProductCard.tsx",
+    "src/components/ui/calendar.tsx",
+    "src/components/ui/resizable.tsx",
+    "src/lib/api/example.functions.ts"
+  ]
 }

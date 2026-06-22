@@ -188,7 +188,7 @@ const FoodItem = () => {
         <Button
           variant="outline"
           onClick={() => navigate('/menu')}
-          className="mb-6"
+          className="mb-6 h-11 px-4 text-sm"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Menu
@@ -209,7 +209,7 @@ const FoodItem = () => {
           </div>
 
           {/* Details */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-28 h-fit">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{item.name}</h1>
               {item.category && (
@@ -267,7 +267,7 @@ const FoodItem = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleUpdateQuantity(currentQuantity - 1)}
-                      className="h-10 w-10 p-0"
+                      className="h-11 w-11 sm:h-10 sm:w-10 p-0"
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -276,7 +276,7 @@ const FoodItem = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleUpdateQuantity(currentQuantity + 1)}
-                      className="h-10 w-10 p-0"
+                      className="h-11 w-11 sm:h-10 sm:w-10 p-0"
                       disabled={!item.in_stock}
                     >
                       <Plus className="h-4 w-4" />

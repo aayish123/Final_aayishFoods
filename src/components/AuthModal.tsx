@@ -67,12 +67,13 @@ const AuthModal = () => {
         const { error } = await signIn(email, password);
         
         if (error) {
-          if (error.message.includes('Email not confirmed')) {
+          const err = error as any;
+          if (err.message.includes('Email not confirmed')) {
             toast.error('Please check your email and click the confirmation link first.');
-          } else if (error.message.includes('Invalid login credentials')) {
+          } else if (err.message.includes('Invalid login credentials')) {
             toast.error('Invalid email or password. Please check your credentials.');
           } else {
-            toast.error(error.message);
+            toast.error(err.message);
           }
         } else {
           setPendingRedirect(true);
@@ -84,11 +85,12 @@ const AuthModal = () => {
         }
         const { error } = await signUp(email, password, fullName);
         if (error) {
-          if (error.message.includes('User already registered')) {
+          const err = error as any;
+          if (err.message.includes('User already registered')) {
             toast.error('Account already exists. Please sign in instead.');
             setMode('signin');
           } else {
-            toast.error(error.message);
+            toast.error(err.message);
           }
         } else {
           toast.success('Account created successfully! You can now sign in.');
@@ -102,7 +104,7 @@ const AuthModal = () => {
         }
         const { error } = await resetPassword(email);
         if (error) {
-          toast.error(error.message);
+          toast.error((error as any).message);
         } else {
           toast.success('Password reset link sent to your email!');
           setMode('signin');
@@ -118,12 +120,12 @@ const AuthModal = () => {
 
   // Redirect after login when role is loaded
   if (pendingRedirect && user && role) {
-    if (role === 'admin') {
+    if (role && role !== 'user') {
       toast.success('Welcome Admin!');
       navigate('/admin');
     } else {
       toast.success('Welcome back!');
-      navigate('/');
+      navigate('/dashboard');
     }
     setPendingRedirect(false);
     closeAuthModal();
@@ -189,34 +191,37 @@ const AuthModal = () => {
         closeAuthModal();
       }
     }}>
-      <DialogContent className="sm:max-w-md">
-                 <DialogHeader>
+      <DialogContent className="w-[92vw] sm:max-w-md max-h-[90vh] overflow-y-auto p-0 border-border/40 shadow-2xl rounded-3xl">
+         <DialogHeader className="px-8 pt-10 pb-6 text-center bg-secondary/5 border-b border-border/40">
            <div className="text-center">
-             <DialogTitle className="text-2xl font-bold text-orange-600">AAYISH</DialogTitle>
-             <h2 className="text-xl font-semibold mt-2">{getTitle()}</h2>
-             <p className="text-sm text-gray-600 mt-1">{getDescription()}</p>
+             <DialogTitle className="text-3xl font-serif font-bold text-primary tracking-tight">AAYISH</DialogTitle>
+             <h2 className="text-2xl font-bold text-foreground mt-4 font-serif">{getTitle()}</h2>
+             <p className="text-base text-muted-foreground mt-2">{getDescription()}</p>
            </div>
          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5">
           {mode === 'signup' && (
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="Enter your full name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required={mode === 'signup'}
-              />
+              <Label htmlFor="fullName" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Full Name</Label>
+              <div className="relative">
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required={mode === 'signup'}
+                  className="h-14 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
+                />
+              </div>
             </div>
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
               <Input
                 id="email"
                 type="email"
@@ -224,31 +229,31 @@ const AuthModal = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="pl-10"
+                className="h-14 pl-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
               />
             </div>
           </div>
           
           {mode !== 'forgot' && (
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="h-14 pl-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                 />
               </div>
               {mode === 'signin' && (
-                <div className="text-right">
+                <div className="text-right pt-1">
                   <button
                     type="button"
                     onClick={() => setMode('forgot')}
-                    className="text-sm text-orange-600 hover:text-orange-700 hover:underline transition-colors"
+                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                   >
                     Forgot your password?
                   </button>
@@ -257,20 +262,22 @@ const AuthModal = () => {
             </div>
           )}
           
-          <Button type="submit" className="w-full" disabled={loading}>
-            {getSubmitButtonText()}
-          </Button>
+          <div className="pt-2">
+            <Button type="submit" className="w-full h-14 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all" disabled={loading}>
+              {getSubmitButtonText()}
+            </Button>
+          </div>
           
           {/* Only show Google Sign-In for signin and signup modes */}
           {mode !== 'forgot' && (
             <>
               {/* Divider */}
-              <div className="relative my-4">
+              <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
+                  <span className="w-full border-t border-border/60" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                <div className="relative flex justify-center text-xs uppercase tracking-widest font-semibold">
+                  <span className="bg-background px-4 text-muted-foreground">Or continue with</span>
                 </div>
               </div>
               
@@ -280,14 +287,13 @@ const AuthModal = () => {
                 variant="outline"
                 onClick={handleGoogleSignIn}
                 disabled={googleLoading}
-                className="w-full"
+                className="w-full h-14 rounded-xl text-base font-semibold border-2 hover:bg-secondary/20 transition-all"
               >
                 {googleLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2" />
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-foreground mr-3" />
                 ) : (
-                  <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24">
                     <path
-                    
                       fill="currentColor"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     />
@@ -311,14 +317,14 @@ const AuthModal = () => {
           )}
         </form>
         
-        <div className="mt-6 text-center space-y-2">
+        <div className="px-8 pb-8 pt-2 text-center space-y-2 bg-secondary/5 border-t border-border/40">
           {mode === 'signin' && (
-            <p className="text-sm text-gray-600">
+            <p className="text-base text-muted-foreground">
               Don't have an account?{' '}
               <button
                 type="button"
                 onClick={() => setMode('signup')}
-                className="text-orange-600 hover:underline font-medium"
+                className="text-primary hover:text-primary/80 font-bold transition-colors ml-1"
               >
                 Sign up
               </button>
@@ -326,26 +332,25 @@ const AuthModal = () => {
           )}
           
           {mode === 'signup' && (
-            <p className="text-sm text-gray-600">
+            <p className="text-base text-muted-foreground">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={() => setMode('signin')}
-                className="text-orange-600 hover:underline font-medium"
+                className="text-primary hover:text-primary/80 font-bold transition-colors ml-1"
               >
                 Sign in
               </button>
             </p>
           )}
           
-          
           {mode === 'forgot' && (
-            <p className="text-sm text-gray-600">
+            <p className="text-base text-muted-foreground">
               Remember your password?{' '}
               <button
                 type="button"
                 onClick={() => setMode('signin')}
-                className="text-orange-600 hover:underline font-medium"
+                className="text-primary hover:text-primary/80 font-bold transition-colors ml-1"
               >
                 Sign in
               </button>

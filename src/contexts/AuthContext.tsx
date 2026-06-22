@@ -7,10 +7,11 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   role: string | null;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
+  isActive: boolean;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: unknown }>;
+  signIn: (email: string, password: string) => Promise<{ error: unknown }>;
+  signInWithGoogle: () => Promise<{ error: unknown }>;
+  resetPassword: (email: string) => Promise<{ error: unknown }>;
   signOut: () => Promise<void>;
 }
 
@@ -29,19 +30,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState<boolean>(true);
 
   // Fetch user profile (including role) from Supabase
   const fetchUserProfile = async (userId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('profiles')
-      .select('role')
+      .select('role, is_active')
       .eq('id', userId)
       .single();
     if (error) {
       console.error('Error fetching user profile:', error);
       setRole(null);
+      setIsActive(false);
     } else {
+      const active = data?.is_active ?? true;
+      if (!active) {
+        setRole(null);
+        setIsActive(false);
+        await supabase.auth.signOut();
+        return;
+      }
       setRole(data?.role || 'user');
+      setIsActive(active);
     }
   };
 
@@ -154,6 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     loading,
     role,
+    isActive,
     signUp,
     signIn,
     signInWithGoogle,

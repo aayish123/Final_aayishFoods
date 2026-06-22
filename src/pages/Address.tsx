@@ -27,12 +27,13 @@ interface Address {
 const Address = () => {
   const { user } = useAuth();
   const { openAuthModal } = useAuthModal();
-  const { items, totalAmount } = useCart();
+  const { items, totalAmount, appliedCoupon, discountAmount } = useCart();
   const navigate = useNavigate();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [deliveryFees, setDeliveryFees] = useState<Record<string, number>>({});
   const [newAddress, setNewAddress] = useState({
     full_name: '',
     phone: '',
@@ -44,6 +45,7 @@ const Address = () => {
   });
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
+   
   useEffect(() => {
     if (!user) {
       openAuthModal();
@@ -55,6 +57,50 @@ const Address = () => {
     }
     fetchAddresses();
   }, [user, items, navigate]);
+
+  const calculateDeliveryFees = async (addrList: Address[]) => {
+    if (addrList.length === 0) return;
+    
+    let defaultFee = 60;
+    try {
+      const { data: settingsData } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('category', 'shipping')
+        .maybeSingle();
+      
+      if (settingsData && settingsData.value) {
+        const val = settingsData.value as { deliveryFee?: number };
+        if (val.deliveryFee !== undefined) {
+          defaultFee = Number(val.deliveryFee);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching shipping settings:', err);
+    }
+
+    const fees: Record<string, number> = {};
+    for (const addr of addrList) {
+      try {
+        const { data: zone } = await supabase
+          .from('delivery_zones')
+          .select('delivery_charge, is_active')
+          .eq('pincode', addr.pincode.trim())
+          .eq('is_active', true)
+          .maybeSingle();
+
+        if (zone) {
+          fees[addr.id] = Number(zone.delivery_charge);
+        } else {
+          fees[addr.id] = defaultFee;
+        }
+      } catch (err) {
+        console.error('Error fetching zone for address:', addr.id, err);
+        fees[addr.id] = defaultFee;
+      }
+    }
+    setDeliveryFees(fees);
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -71,6 +117,7 @@ const Address = () => {
         const defaultAddress = data.find(addr => addr.is_default);
         setSelectedAddress(defaultAddress?.id || data[0].id);
       }
+      await calculateDeliveryFees(data || []);
     } catch (error) {
       console.error('Error fetching addresses:', error);
       toast.error('Failed to load addresses');
@@ -154,7 +201,8 @@ const Address = () => {
       toast.error('Please select a delivery address');
       return;
     }
-    navigate('/payment', { state: { addressId: selectedAddress } });
+    const deliveryFee = deliveryFees[selectedAddress] || 0;
+    navigate('/payment', { state: { addressId: selectedAddress, deliveryFee } });
   };
 
   if (loading) {
@@ -166,49 +214,61 @@ const Address = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background pt-10 pb-24">
       <SocialIcons />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Delivery Address</h1>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">Delivery Address</h1>
+          <div className="w-24 h-1 bg-secondary mx-auto rounded-full"></div>
+        </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="lg:col-span-2 space-y-8">
             {addresses.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Select Address</CardTitle>
+              <Card className="shadow-xl shadow-primary/5 border border-border/40 rounded-2xl overflow-hidden">
+                <CardHeader className="bg-secondary/10 border-b border-border/40 py-6">
+                  <CardTitle className="font-serif text-2xl text-foreground">Select Address</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-6 space-y-4">
                   {addresses.map((address) => (
                     <div
                       key={address.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      className={`p-5 border-2 rounded-xl cursor-pointer transition-all ${
                         selectedAddress === address.id
-                          ? 'border-orange-500 bg-orange-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-border/60 hover:border-primary/50 hover:bg-muted/30'
                       }`}
                       onClick={() => setSelectedAddress(address.id)}
                     >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold">{address.full_name}</h3>
-                          <p className="text-sm text-gray-600">{address.phone}</p>
-                          <p className="text-sm text-gray-600">
-                            {address.address_line1}
-                            {address.address_line2 && `, ${address.address_line2}`}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {address.city}, {address.state} - {address.pincode}
-                          </p>
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div className="flex items-start space-x-3">
+                          <div className={`mt-1 flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center ${
+                            selectedAddress === address.id ? 'border-primary' : 'border-muted-foreground'
+                          }`}>
+                            {selectedAddress === address.id && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-3 mb-1">
+                              <h3 className="font-semibold text-lg text-foreground">{address.full_name}</h3>
+                              {address.is_default && (
+                                <span className="text-[10px] uppercase tracking-wider bg-secondary/80 text-primary px-2 py-0.5 rounded-full font-bold">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm font-medium text-muted-foreground mb-2">{address.phone}</p>
+                            <p className="text-sm text-foreground/80 leading-relaxed">
+                              {address.address_line1}
+                              {address.address_line2 && `, ${address.address_line2}`}
+                            </p>
+                            <p className="text-sm text-foreground/80">
+                              {address.city}, {address.state} - <span className="font-medium">{address.pincode}</span>
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex flex-col gap-2 items-end">
-                          {address.is_default && (
-                            <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded mb-1">
-                              Default
-                            </span>
-                          )}
-                          <Button size="sm" variant="outline" onClick={e => { e.stopPropagation(); handleEditAddress(address); }}>Edit</Button>
-                          <Button size="sm" variant="destructive" onClick={e => { e.stopPropagation(); handleDeleteAddress(address.id); }}>Delete</Button>
+                        <div className="flex gap-2 sm:flex-col sm:items-end justify-end ml-8 sm:ml-0">
+                          <Button size="sm" variant="ghost" className="h-11 sm:h-8 px-3 rounded-lg hover:bg-white hover:text-primary transition-all text-muted-foreground" onClick={e => { e.stopPropagation(); handleEditAddress(address); }}>Edit</Button>
+                          <Button size="sm" variant="ghost" className="h-11 sm:h-8 px-3 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-all text-muted-foreground" onClick={e => { e.stopPropagation(); handleDeleteAddress(address.id); }}>Delete</Button>
                         </div>
                       </div>
                     </div>
@@ -218,88 +278,98 @@ const Address = () => {
             )}
 
             {showNewAddressForm ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>{editingAddress ? 'Edit Address' : 'Add New Address'}</CardTitle>
+              <Card className="shadow-xl shadow-primary/5 border border-border/40 rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
+                <CardHeader className="bg-secondary/10 border-b border-border/40 py-6">
+                  <CardTitle className="font-serif text-2xl text-foreground">{editingAddress ? 'Edit Address' : 'Add New Address'}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="full_name">Full Name</Label>
+                <CardContent className="p-6 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="full_name" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Full Name</Label>
                       <Input
                         id="full_name"
                         value={newAddress.full_name}
                         onChange={(e) => setNewAddress({ ...newAddress, full_name: e.target.value })}
+                        className="h-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary"
                         required
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="phone">Phone Number</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Phone Number</Label>
                       <Input
                         id="phone"
                         type="tel"
                         value={newAddress.phone}
                         onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
+                        className="h-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary"
                         required
                       />
                     </div>
                   </div>
                   
-                  <div>
-                    <Label htmlFor="address_line1">Address Line 1</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="address_line1" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Address Line 1</Label>
                     <Input
                       id="address_line1"
                       value={newAddress.address_line1}
                       onChange={(e) => setNewAddress({ ...newAddress, address_line1: e.target.value })}
                       placeholder="House/Flat No., Street Name"
+                      className="h-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary"
                       required
                     />
                   </div>
                   
-                  <div>
-                    <Label htmlFor="address_line2">Address Line 2 (Optional)</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="address_line2" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Address Line 2 <span className="normal-case font-normal text-muted-foreground">(Optional)</span></Label>
                     <Input
                       id="address_line2"
                       value={newAddress.address_line2}
                       onChange={(e) => setNewAddress({ ...newAddress, address_line2: e.target.value })}
                       placeholder="Landmark, Area"
+                      className="h-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary"
                     />
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="city">City</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="city" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">City</Label>
                       <Input
                         id="city"
                         value={newAddress.city}
                         onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                        className="h-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary"
                         required
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="state">State</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="state" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">State</Label>
                       <Input
                         id="state"
                         value={newAddress.state}
                         onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
+                        className="h-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary"
                         required
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="pincode">Pincode</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="pincode" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Pincode</Label>
                       <Input
                         id="pincode"
                         value={newAddress.pincode}
                         onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
+                        className="h-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary"
                         required
                       />
                     </div>
                   </div>
                   
-                  <div className="flex space-x-2">
-                    <Button onClick={handleSaveAddress}>{editingAddress ? 'Update Address' : 'Save Address'}</Button>
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
+                    <Button onClick={handleSaveAddress} className="h-12 rounded-xl px-8 flex-1 sm:flex-none">
+                      {editingAddress ? 'Update Address' : 'Save Address'}
+                    </Button>
                     <Button
                       variant="outline"
+                      className="h-12 rounded-xl px-8 flex-1 sm:flex-none hover:bg-secondary/20"
                       onClick={() => { setShowNewAddressForm(false); setEditingAddress(null); setNewAddress({ full_name: '', phone: '', address_line1: '', address_line2: '', city: '', state: '', pincode: '' }); }}
                     >
                       Cancel
@@ -311,40 +381,73 @@ const Address = () => {
               <Button
                 variant="outline"
                 onClick={() => { setShowNewAddressForm(true); setEditingAddress(null); setNewAddress({ full_name: '', phone: '', address_line1: '', address_line2: '', city: '', state: '', pincode: '' }); }}
-                className="w-full"
+                className="w-full h-16 rounded-2xl border-2 border-dashed border-border/60 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all text-muted-foreground font-semibold text-lg"
               >
-                Add New Address
+                + Add New Address
               </Button>
             )}
           </div>
 
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+            <Card className="shadow-xl shadow-primary/5 border border-border/40 rounded-2xl overflow-hidden sticky top-24">
+              <CardHeader className="bg-secondary/10 border-b border-border/40 py-6">
+                <CardTitle className="font-serif text-2xl text-foreground">Order Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-3">
                   {items.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span>{item.name} x {item.quantity}</span>
-                      <span>₹{(item.price * item.quantity).toFixed(2)}</span>
+                    <div key={item.id + '-' + item.variantId} className="flex justify-between text-sm text-foreground/80">
+                      <span className="truncate pr-4 flex-1">{item.name} <span className="text-muted-foreground">({item.variantLabel})</span> x {item.quantity}</span>
+                      <span className="font-medium shrink-0">₹{(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
-                <hr />
-                <div className="flex justify-between font-semibold text-lg">
-                  <span>Total</span>
-                  <span>₹{totalAmount.toFixed(2)}</span>
+                
+                <div className="h-px bg-border/60" />
+
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm text-foreground/80">
+                    <span>Subtotal</span>
+                    <span className="font-medium">₹{totalAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-foreground/80">
+                    <span>Delivery Fee</span>
+                    <span className="font-medium text-foreground">
+                      {selectedAddress && deliveryFees[selectedAddress] !== undefined
+                        ? `₹${deliveryFees[selectedAddress].toFixed(2)}`
+                        : 'Calculated at payment'}
+                    </span>
+                  </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Discount ({appliedCoupon?.code})</span>
+                      <span>- ₹{discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
                 
-                <Button 
-                  onClick={handleProceedToPayment} 
-                  className="w-full"
-                  disabled={!selectedAddress}
-                >
-                  Proceed to Payment
-                </Button>
+                <div className="h-px bg-border/60" />
+                
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-foreground">Total</span>
+                  <span className="font-bold text-2xl text-primary">
+                    ₹{(
+                      totalAmount - 
+                      discountAmount + 
+                      (selectedAddress && deliveryFees[selectedAddress] !== undefined ? deliveryFees[selectedAddress] : 0)
+                    ).toFixed(2)}
+                  </span>
+                </div>
+                
+                <div className="pt-4">
+                  <Button 
+                    onClick={handleProceedToPayment} 
+                    className="w-full h-14 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all"
+                    disabled={!selectedAddress || addresses.length === 0}
+                  >
+                    Proceed to Payment
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

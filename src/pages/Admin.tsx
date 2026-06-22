@@ -131,44 +131,8 @@ const Admin = () => {
       )
       .subscribe();
 
-    // Set up real-time subscription for food items
-    const foodItemsChannel = supabase
-      .channel('admin-food-items-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'food_items'
-        },
-        (payload) => {
-          console.log('Food item change detected:', payload);
-          fetchFoodItems();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscription for variants
-    const variantsChannel = supabase
-      .channel('admin-variants-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'food_item_variants'
-        },
-        (payload) => {
-          console.log('Variant change detected:', payload);
-          fetchVariants();
-        }
-      )
-      .subscribe();
-
     return () => {
       supabase.removeChannel(ordersChannel);
-      supabase.removeChannel(foodItemsChannel);
-      supabase.removeChannel(variantsChannel);
     };
   }, []);
 
@@ -344,10 +308,12 @@ const Admin = () => {
 
     try {
       console.log('Adding new food item:', newItem);
+      const generatedSlug = newItem.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 7);
       const { error } = await supabase
         .from('food_items')
         .insert({
           name: newItem.name,
+          slug: generatedSlug,
           description: newItem.description,
           price: parseFloat(newItem.price),
           category: newItem.category,

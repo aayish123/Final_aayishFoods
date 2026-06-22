@@ -209,7 +209,7 @@ const Orders = () => {
               {activeOrders.map((order) => (
                 <Card key={order.id}>
                   <CardHeader>
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                       <div>
                         <CardTitle className="text-lg">Order #{order.id.slice(-8)}</CardTitle>
                         <p className="text-sm text-gray-500">
@@ -294,7 +294,7 @@ const Orders = () => {
               {pastOrders.map((order) => (
                 <Card key={order.id} className="opacity-75">
                   <CardHeader>
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                       <div>
                         <CardTitle className="text-lg">Order #{order.id.slice(-8)}</CardTitle>
                         <p className="text-sm text-gray-500">

@@ -97,20 +97,20 @@ const ResetPassword = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Link to="/" className="text-2xl font-bold text-orange-600 mb-4 block">
-              AAYISH
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-md shadow-2xl shadow-destructive/10 border border-destructive/20 rounded-3xl overflow-hidden">
+          <CardHeader className="text-center pt-10 pb-6 px-8">
+            <Link to="/" className="inline-block mb-6">
+              <span className="text-3xl font-serif font-bold text-primary tracking-tight">AAYISH</span>
             </Link>
-            <CardTitle className="text-red-600">Reset Link Error</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-serif text-3xl font-bold text-destructive mb-2">Reset Link Error</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               {error}
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
+          <CardContent className="px-8 pb-10 text-center">
             <Link to="/auth">
-              <Button className="w-full">
+              <Button className="w-full h-14 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all">
                 Go to Sign In
               </Button>
             </Link>
@@ -122,23 +122,25 @@ const ResetPassword = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Link to="/" className="text-2xl font-bold text-orange-600 mb-4 block">
-              AAYISH
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-md shadow-2xl shadow-green-500/10 border border-green-500/20 rounded-3xl overflow-hidden">
+          <CardHeader className="text-center pt-10 pb-6 px-8">
+            <Link to="/" className="inline-block mb-6">
+              <span className="text-3xl font-serif font-bold text-primary tracking-tight">AAYISH</span>
             </Link>
-            <div className="flex justify-center mb-4">
-              <CheckCircle className="h-16 w-16 text-green-600" />
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center animate-in zoom-in duration-500">
+                <CheckCircle className="h-10 w-10 text-green-600" />
+              </div>
             </div>
-            <CardTitle className="text-green-600">Password Reset Success!</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-serif text-3xl font-bold text-green-600 mb-2">Password Reset Success!</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               Your password has been reset successfully. You will be redirected to the sign-in page shortly.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
+          <CardContent className="px-8 pb-10 text-center">
             <Link to="/auth">
-              <Button className="w-full">
+              <Button className="w-full h-14 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all bg-green-600 hover:bg-green-700">
                 Go to Sign In Now
               </Button>
             </Link>
@@ -149,23 +151,23 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <Link to="/" className="text-2xl font-bold text-orange-600 mb-4 block">
-            AAYISH
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md shadow-2xl shadow-primary/10 border border-border/40 rounded-3xl overflow-hidden">
+        <CardHeader className="text-center pt-10 pb-6 px-8">
+          <Link to="/" className="inline-block mb-6">
+            <span className="text-3xl font-serif font-bold text-primary tracking-tight">AAYISH</span>
           </Link>
-          <CardTitle>Reset Your Password</CardTitle>
-          <CardDescription>
+          <CardTitle className="font-serif text-3xl font-bold text-foreground mb-2">Reset Your Password</CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
             Enter your new password below
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handlePasswordReset} className="space-y-4">
+        <CardContent className="px-8 pb-10">
+          <form onSubmit={handlePasswordReset} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">New Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -174,23 +176,23 @@ const ResetPassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="pl-10 pr-10"
+                  className="h-14 pl-12 pr-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500">Password must be at least 6 characters long</p>
+              <p className="text-xs text-muted-foreground pt-1">Password must be at least 6 characters long</p>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Confirm New Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -199,25 +201,27 @@ const ResetPassword = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="pl-10 pr-10"
+                  className="h-14 pl-12 pr-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
             
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Resetting Password...' : 'Reset Password'}
-            </Button>
+            <div className="pt-2">
+              <Button type="submit" className="w-full h-14 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all" disabled={loading}>
+                {loading ? 'Resetting Password...' : 'Reset Password'}
+              </Button>
+            </div>
           </form>
           
-          <div className="mt-6 text-center">
-            <Link to="/auth" className="text-sm text-orange-600 hover:text-orange-700 hover:underline">
+          <div className="mt-8 text-center">
+            <Link to="/auth" className="inline-flex items-center justify-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors group">
               Back to Sign In
             </Link>
           </div>

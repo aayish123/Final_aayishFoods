@@ -35,12 +35,13 @@ const Auth = () => {
         const { error } = await signIn(email, password);
         
         if (error) {
-          if (error.message.includes('Email not confirmed')) {
+          const err = error as any;
+          if (err.message.includes('Email not confirmed')) {
             toast.error('Please check your email and click the confirmation link first.');
-          } else if (error.message.includes('Invalid login credentials')) {
+          } else if (err.message.includes('Invalid login credentials')) {
             toast.error('Invalid email or password. Please check your credentials.');
           } else {
-            toast.error(error.message);
+            toast.error(err.message);
           }
         } else {
           setPendingRedirect(true); // Wait for role to be loaded
@@ -52,11 +53,12 @@ const Auth = () => {
         }
         const { error } = await signUp(email, password, fullName);
         if (error) {
-          if (error.message.includes('User already registered')) {
+          const err = error as any;
+          if (err.message.includes('User already registered')) {
             toast.error('Account already exists. Please sign in instead.');
             setIsLogin(true);
           } else {
-            toast.error(error.message);
+            toast.error(err.message);
           }
         } else {
           toast.success('Account created successfully! You can now sign in.');
@@ -99,7 +101,7 @@ const Auth = () => {
     try {
       const { error } = await resetPassword(email);
       if (error) {
-        toast.error(error.message);
+        toast.error((error as any).message);
       } else {
         toast.success('Password reset link sent to your email! Check your inbox.');
         setShowForgotPassword(false);
@@ -122,7 +124,7 @@ const Auth = () => {
   // Redirect after login when role is loaded
   useEffect(() => {
     if (pendingRedirect && user && role) {
-      if (role === 'admin') {
+      if (role && role !== 'user') {
         toast.success('Welcome Admin!');
         navigate('/admin');
       } else {
@@ -145,23 +147,23 @@ const Auth = () => {
   // Forgot Password View
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Link to="/" className="text-2xl font-bold text-orange-600 mb-4 block">
-              AAYISH
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-md shadow-2xl shadow-primary/10 border border-border/40 rounded-3xl overflow-hidden">
+          <CardHeader className="text-center pt-10 pb-6 px-8">
+            <Link to="/" className="inline-block mb-6">
+              <span className="text-3xl font-serif font-bold text-primary tracking-tight">AAYISH</span>
             </Link>
-            <CardTitle>Forgot Password</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-serif text-3xl font-bold text-foreground mb-2">Forgot Password</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               Enter your email address and we'll send you a link to reset your password
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleForgotPassword} className="space-y-4">
+          <CardContent className="px-8 pb-10">
+            <form onSubmit={handleForgotPassword} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="forgot-email">Email Address</Label>
+                <Label htmlFor="forgot-email" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Email Address</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                   <Input
                     id="forgot-email"
                     type="email"
@@ -169,23 +171,23 @@ const Auth = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="pl-10"
+                    className="h-14 pl-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                   />
                 </div>
               </div>
               
-              <Button type="submit" className="w-full" disabled={forgotPasswordLoading}>
+              <Button type="submit" className="w-full h-14 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all" disabled={forgotPasswordLoading}>
                 {forgotPasswordLoading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </form>
             
-            <div className="mt-6 text-center">
+            <div className="mt-8 text-center">
               <button
                 type="button"
                 onClick={goBackToLogin}
-                className="flex items-center justify-center w-full text-sm text-gray-600 hover:text-orange-600 transition-colors"
+                className="inline-flex items-center justify-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                 Back to Sign In
               </button>
             </div>
@@ -196,27 +198,27 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <Link to="/" className="text-2xl font-bold text-orange-600 mb-4 block">
-            AAYISH
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md shadow-2xl shadow-primary/10 border border-border/40 rounded-3xl overflow-hidden">
+        <CardHeader className="text-center pt-10 pb-6 px-8">
+          <Link to="/" className="inline-block mb-6">
+            <span className="text-3xl font-serif font-bold text-primary tracking-tight">AAYISH</span>
           </Link>
-          <CardTitle>{isLogin ? 'Welcome Back' : 'Create Account'}</CardTitle>
-          <CardDescription>
+          <CardTitle className="font-serif text-3xl font-bold text-foreground mb-2">{isLogin ? 'Welcome Back' : 'Create Account'}</CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
             {isLogin 
               ? 'Sign in to your account to continue' 
               : 'Join AAYISH for delicious food delivery'
             }
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="px-8 pb-10">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Full Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                   <Input
                     id="fullName"
                     type="text"
@@ -224,15 +226,15 @@ const Auth = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required={!isLogin}
-                    className="pl-10"
+                    className="h-14 pl-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                   />
                 </div>
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                 <Input
                   id="email"
                   type="email"
@@ -240,14 +242,14 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pl-10"
+                  className="h-14 pl-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                 <Input
                   id="password"
                   type="password"
@@ -256,35 +258,37 @@ const Auth = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="pl-10"
+                  className="h-14 pl-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                 />
               </div>
             </div>
             
             {/* Forgot Password Link - Only show on login */}
             {isLogin && (
-              <div className="text-right">
+              <div className="text-right pt-1">
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-orange-600 hover:text-orange-700 hover:underline transition-colors"
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   Forgot your password?
                 </button>
               </div>
             )}
             
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
-            </Button>
+            <div className="pt-2">
+              <Button type="submit" className="w-full h-14 rounded-xl text-lg font-semibold shadow-md hover:shadow-lg transition-all" disabled={loading}>
+                {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+              </Button>
+            </div>
             
             {/* Divider */}
-            <div className="relative my-6">
+            <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+                <span className="w-full border-t border-border/60" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Or continue with</span>
+              <div className="relative flex justify-center text-xs uppercase tracking-widest font-semibold">
+                <span className="bg-background px-4 text-muted-foreground">Or continue with</span>
               </div>
             </div>
             
@@ -294,12 +298,12 @@ const Auth = () => {
               variant="outline"
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
-              className="w-full"
+              className="w-full h-14 rounded-xl text-base font-semibold border-2 hover:bg-secondary/20 transition-all"
             >
               {googleLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2" />
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-foreground mr-3" />
               ) : (
-                <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -322,26 +326,18 @@ const Auth = () => {
             </Button>
           </form>
           
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="mt-8 text-center">
+            <p className="text-base text-muted-foreground">
               {isLogin ? "Don't have an account?" : "Already have an account?"}
               <button
                 type="button"
                 onClick={() => setIsLogin(!isLogin)}
-                className="ml-1 text-orange-600 hover:underline font-medium"
+                className="ml-2 text-primary hover:text-primary/80 font-bold transition-colors"
               >
                 {isLogin ? 'Sign up' : 'Sign in'}
               </button>
             </p>
           </div>
-
-          {/* {isLogin && (
-            <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
-              <p className="text-sm font-semibold text-orange-800 mb-2">Demo Admin Access:</p>
-              <p className="text-sm text-orange-700"><strong>Email:</strong> aayishfoods@gmail.com</p>
-              <p className="text-sm text-orange-700"><strong>Password:</strong> Thinkcheddam</p>
-            </div>
-          )} */}
         </CardContent>
       </Card>
     </div>

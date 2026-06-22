@@ -34,7 +34,12 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('recharts') || id.includes('d3-')) {
               return 'vendor-charts';
             }
-            if (id.includes('@supabase') || id.includes('@tanstack')) {
+            const isReact = id.includes('/react/') || 
+                            id.includes('/react-dom/') || 
+                            id.includes('/react-router/') || 
+                            id.includes('/react-router-dom/');
+            const isCore = id.includes('@supabase') || id.includes('@tanstack');
+            if (isReact || isCore) {
               return 'vendor-core';
             }
             return 'vendor-libs';

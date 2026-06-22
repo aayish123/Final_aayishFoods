@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 40 33% 98%; /* #fdfbf7 */
+    --foreground: 28 63% 18%; /* #4a2c11 */
+
+    --card: 0 0% 100%;
+    --card-foreground: 28 63% 18%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 28 63% 18%;
+
+    --primary: 151 39% 17%; /* Dark Green #1a3b2b */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 33% 92%; /* Slightly darker beige */
+    --secondary-foreground: 28 63% 18%;
+
+    --muted: 40 33% 92%;
+    --muted-foreground: 28 20% 40%;
+
+    --accent: 7 58% 23%; /* Maroon #5c2018 */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 40 20% 85%;
+    --input: 40 20% 85%;
+    --ring: 151 39% 17%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 28 63% 18%;
+    --sidebar-primary: 151 39% 17%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 33% 92%;
+    --sidebar-accent-foreground: 28 63% 18%;
+    --sidebar-border: 40 20% 85%;
+    --sidebar-ring: 151 39% 17%;
+  }
+
+  .dark {
+    /* Keep light theme as default for Aayish, or provide a dark traditional version */
+    --background: 28 63% 10%;
+    --foreground: 40 33% 98%;
+
+    --card: 28 63% 12%;
+    --card-foreground: 40 33% 98%;
+
+    --popover: 28 63% 12%;
+    --popover-foreground: 40 33% 98%;
+
+    --primary: 151 39% 25%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 28 40% 20%;
+    --secondary-foreground: 40 33% 98%;
+
+    --muted: 28 40% 20%;
+    --muted-foreground: 40 20% 70%;
+
+    --accent: 7 58% 30%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 40 33% 98%;
+
+    --border: 28 40% 25%;
+    --input: 28 40% 25%;
+    --ring: 151 39% 25%;
+
+    --sidebar-background: 28 63% 12%;
+    --sidebar-foreground: 40 33% 98%;
+    --sidebar-primary: 151 39% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 28 40% 20%;
+    --sidebar-accent-foreground: 40 33% 98%;
+    --sidebar-border: 28 40% 25%;
+    --sidebar-ring: 151 39% 25%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

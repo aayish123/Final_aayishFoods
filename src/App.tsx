@@ -94,9 +94,9 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   
   if (!user && !isGoogleOAuthInProgress) {
     sessionStorage.setItem('post_login_redirect', location.pathname + location.search);
-    // Open auth modal instead of navigating, but not during Google OAuth
+    // Redirect to storefront home page and open auth modal there
     openAuthModal();
-    return null;
+    return <Navigate to="/" replace />;
   }
   
   return children;
@@ -112,9 +112,9 @@ function RequireAdmin({ children }: { children: JSX.Element }) {
   
   if (!user) {
     sessionStorage.setItem('post_login_redirect', location.pathname + location.search);
-    // Open auth modal instead of navigating
+    // Redirect to storefront home page and open auth modal there
     openAuthModal();
-    return null;
+    return <Navigate to="/" replace />;
   }
   
   if (!isActive) {

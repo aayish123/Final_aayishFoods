@@ -1,3 +1,12 @@
+-- Create update_updated_at_column function if not exists
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Create hero_settings singleton table
 CREATE TABLE IF NOT EXISTS public.hero_settings (
   id UUID PRIMARY KEY DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,

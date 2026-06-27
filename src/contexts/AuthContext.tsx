@@ -230,7 +230,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      setUser(null);
+      setSession(null);
       setRole(null);
+      setIsActive(false);
       setIsSigningIn(false);
       setRedirectHandled(false);
       queryClient.clear();

@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, getPostLoginRoute } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Mail, User, Lock, ArrowLeft } from 'lucide-react';
+import { Mail, User, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,9 +16,10 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, role, user, loading: authLoading, signInWithGoogle, resetPassword } = useAuth();
-  const [pendingRedirect, setPendingRedirect] = useState(false);
+
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -43,8 +44,6 @@ const Auth = () => {
           } else {
             toast.error(err.message);
           }
-        } else {
-          setPendingRedirect(true); // Wait for role to be loaded
         }
       } else {
         if (!fullName.trim()) {
@@ -121,28 +120,12 @@ const Auth = () => {
     setPassword('');
   };
 
-  // Redirect after login when role is loaded
+  // Redirect already-logged-in users
   useEffect(() => {
-    if (pendingRedirect && user && role) {
-      if (role && role !== 'user') {
-        toast.success('Welcome Admin!');
-        navigate('/admin');
-      } else {
-        toast.success('Welcome back!');
-        navigate('/dashboard');
-      }
-      setPendingRedirect(false);
+    if (!authLoading && user && role) {
+      navigate(getPostLoginRoute(role), { replace: true });
     }
-  }, [pendingRedirect, user, role, navigate]);
-
-  // Show loading spinner while waiting for role after login
-  if (pendingRedirect && (!role || !user)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600"></div>
-      </div>
-    );
-  }
+  }, [user, role, authLoading, navigate]);
 
   // Forgot Password View
   if (showForgotPassword) {
@@ -252,14 +235,23 @@ const Auth = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="h-14 pl-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
+                  className="h-14 pl-12 pr-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer focus:outline-none focus:text-foreground z-10"
+                  aria-label="Toggle password visibility"
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
             

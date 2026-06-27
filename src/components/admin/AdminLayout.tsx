@@ -167,7 +167,7 @@ export default function AdminLayout() {
       localStorage.removeItem('simulated_role');
       await signOut();
       toast.success('Logged out successfully');
-      navigate('/auth');
+      navigate('/', { replace: true });
     } catch (error) {
       toast.error('Signout failed');
     }

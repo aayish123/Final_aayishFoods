@@ -94,7 +94,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
     try {
       await signOut();
       toast.error('Session expired due to inactivity. Please log in again.');
-      navigate('/auth');
+      navigate('/', { replace: true });
     } catch (err) {
       console.error('Session timeout logout failed:', err);
     }
@@ -105,7 +105,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
     try {
       await signOut();
       toast.success('Logged out successfully.');
-      navigate('/auth');
+      navigate('/', { replace: true });
     } catch (err) {
       console.error('Logout failed:', err);
     }

@@ -76,6 +76,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   if (loading) return null;
   
   if (!user && !isGoogleOAuthInProgress) {
+    sessionStorage.setItem('post_login_redirect', location.pathname + location.search);
     // Open auth modal instead of navigating, but not during Google OAuth
     openAuthModal();
     return null;
@@ -88,10 +89,12 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { user, role, isActive, loading } = useAuth();
   const { openAuthModal } = useAuthModal();
+  const location = useLocation();
   
   if (loading) return null;
   
   if (!user) {
+    sessionStorage.setItem('post_login_redirect', location.pathname + location.search);
     // Open auth modal instead of navigating
     openAuthModal();
     return null;

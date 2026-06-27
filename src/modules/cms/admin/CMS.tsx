@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { auditService } from '@/shared/services/auditService';
 import { useUnsavedChangesGuard } from '@/components/system/UnsavedChangesGuard';
 import { useConfirm } from '@/components/common/ConfirmDialog';
+import HeroSettings from './HeroSettings';
+
 
 
 type SectionType = 'hero' | 'about' | 'testimonials' | 'faq' | 'trust_badges' | 'footer';
@@ -472,7 +474,10 @@ export default function AdminCMS() {
 
         {/* Form and Preview Tabs Container */}
         <div className="lg:col-span-3">
-          <Card className="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+          {activeSection === 'hero' ? (
+            <HeroSettings />
+          ) : (
+            <Card className="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
             <Tabs defaultValue="edit" value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col">
               <div className="flex justify-between items-center bg-gray-50/30 px-6 py-3 border-b border-gray-100">
                 <TabsList className="bg-[#1a3b2b]/5 border border-[#1a3b2b]/10 p-0.5 rounded-xl w-fit">
@@ -505,67 +510,7 @@ export default function AdminCMS() {
                   <div className="py-24 text-center text-gray-400">Loading editors...</div>
                 ) : (
                   <div className="space-y-4">
-                    {activeSection === 'hero' && (
-                      <div className="space-y-4 text-xs font-semibold">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="hero-title">Main Hero Headline Title</Label>
-                          <Input
-                            id="hero-title"
-                            value={draftContent.title || ''}
-                            onChange={(e) => handleUpdateDraftField('title', e.target.value)}
-                            className="border-gray-200 rounded-xl"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="hero-subtitle">Sub-headline Description</Label>
-                          <Textarea
-                            id="hero-subtitle"
-                            value={draftContent.subtitle || ''}
-                            onChange={(e) => handleUpdateDraftField('subtitle', e.target.value)}
-                            className="border-gray-200 rounded-xl min-h-[70px]"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <Label htmlFor="hero-cta-text">CTA Button Text</Label>
-                            <Input
-                              id="hero-cta-text"
-                              value={draftContent.ctaText || ''}
-                              onChange={(e) => handleUpdateDraftField('ctaText', e.target.value)}
-                              className="border-gray-200 rounded-xl"
-                            />
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="hero-cta-link">CTA Button Link</Label>
-                            <Input
-                              id="hero-cta-link"
-                              value={draftContent.ctaLink || ''}
-                              onChange={(e) => handleUpdateDraftField('ctaLink', e.target.value)}
-                              className="border-gray-200 rounded-xl"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="hero-bg">Hero Background Image URL</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="hero-bg"
-                              value={draftContent.bgImageUrl || ''}
-                              onChange={(e) => handleUpdateDraftField('bgImageUrl', e.target.value)}
-                              className="border-gray-200 rounded-xl flex-1 font-mono text-[10px]"
-                            />
-                            <Button
-                              type="button"
-                              onClick={() => openMediaPicker('bgImageUrl')}
-                              variant="outline"
-                              className="border-gray-200 hover:bg-gray-50 shrink-0 rounded-xl h-9"
-                            >
-                              Library Media
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+
 
                     {activeSection === 'about' && (
                       <div className="space-y-4">
@@ -997,22 +942,7 @@ export default function AdminCMS() {
                     }`}
                   >
                     {/* Visual heritage mock blocks */}
-                    {activeSection === 'hero' && (
-                      <div 
-                        className="relative bg-cover bg-center flex items-center min-h-[380px] p-8 text-white flex-col justify-center text-center bg-slate-900"
-                        style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url(${draftContent.bgImageUrl || '/placeholder.svg'})` }}
-                      >
-                        <h2 className="font-serif text-[#d4af37] text-3xl font-extrabold tracking-wide max-w-lg leading-tight">
-                          {draftContent.title || 'Headline'}
-                        </h2>
-                        <p className="text-gray-200 mt-4 max-w-md text-xs font-normal leading-relaxed">
-                          {draftContent.subtitle || 'Description details.'}
-                        </p>
-                        <Button className="bg-[#d4af37] hover:bg-[#bfa032] text-gray-900 font-bold px-6 h-10 mt-6 rounded-xl shadow-lg border-0 uppercase tracking-wider text-[10px]">
-                          {draftContent.ctaText || 'Button'}
-                        </Button>
-                      </div>
-                    )}
+
 
                     {activeSection === 'about' && (
                       <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-[#fdfbf7]">
@@ -1196,6 +1126,7 @@ export default function AdminCMS() {
               </TabsContent>
             </Tabs>
           </Card>
+          )}
         </div>
       </div>
 

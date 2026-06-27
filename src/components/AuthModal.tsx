@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthModal } from '@/contexts/AuthModalContext';
 import { toast } from 'sonner';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 type AuthMode = 'signin' | 'signup' | 'forgot';
 
@@ -19,17 +19,19 @@ const AuthModal = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp, resetPassword, signInWithGoogle, role, user } = useAuth();
   const { isAuthModalOpen, closeAuthModal, setGoogleOAuthInProgress } = useAuthModal();
-  const [pendingRedirect, setPendingRedirect] = useState(false);
-  const navigate = useNavigate();
 
-  // Reset OAuth progress state when user is authenticated
+  // Reset OAuth progress state and close modal when user is authenticated
   useEffect(() => {
-    if (user && setGoogleOAuthInProgress) {
-      setGoogleOAuthInProgress(false);
+    if (user) {
+      if (setGoogleOAuthInProgress) {
+        setGoogleOAuthInProgress(false);
+      }
+      closeAuthModal();
     }
-  }, [user, setGoogleOAuthInProgress]);
+  }, [user, setGoogleOAuthInProgress, closeAuthModal]);
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
@@ -75,8 +77,6 @@ const AuthModal = () => {
           } else {
             toast.error(err.message);
           }
-        } else {
-          setPendingRedirect(true);
         }
       } else if (mode === 'signup') {
         if (!fullName.trim()) {
@@ -118,25 +118,11 @@ const AuthModal = () => {
     }
   };
 
-  // Redirect after login when role is loaded
-  if (pendingRedirect && user && role) {
-    if (role && role !== 'user') {
-      toast.success('Welcome Admin!');
-      navigate('/admin');
-    } else {
-      toast.success('Welcome back!');
-      navigate('/dashboard');
-    }
-    setPendingRedirect(false);
-    closeAuthModal();
-  }
-
   const resetForm = () => {
     setEmail('');
     setPassword('');
     setFullName('');
     setLoading(false);
-    setPendingRedirect(false);
   };
 
   const handleClose = () => {
@@ -241,12 +227,21 @@ const AuthModal = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-14 pl-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
+                  className="h-14 pl-12 pr-12 rounded-xl bg-muted/30 border-border/60 focus-visible:ring-primary focus-visible:border-primary text-base"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer focus:outline-none focus:text-foreground z-10"
+                  aria-label="Toggle password visibility"
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
               {mode === 'signin' && (
                 <div className="text-right pt-1">

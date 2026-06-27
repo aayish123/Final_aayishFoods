@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAuthModal } from '@/contexts/AuthModalContext';
 import landingHero from '@/assets/landing_hero.webp';
 import { getOptimizedImageUrl } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { heroService } from '@/shared/services/heroService';
 
 interface FoodItemVariant {
   id: string;
@@ -87,6 +89,14 @@ interface CmsSectionRecord {
 }
 
 const Landing = () => {
+  const { data: dbHeroSettings } = useQuery({
+    queryKey: ['hero-settings'],
+    queryFn: heroService.getHeroSettings,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   const [featuredItems, setFeaturedItems] = useState<FoodItem[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
@@ -223,6 +233,18 @@ const Landing = () => {
     }
   };
 
+  // Merge database values with default fallbacks
+  const heroTitle = dbHeroSettings?.title || cmsContent.hero.title;
+  const heroSubtitle = dbHeroSettings?.subtitle || cmsContent.hero.subtitle;
+  const heroBadge = dbHeroSettings?.badge_text || 'Bringing Home';
+  const heroDesc = dbHeroSettings?.description;
+  const primaryBtnText = dbHeroSettings?.primary_button_text || cmsContent.hero.ctaText || 'Shop Now';
+  const primaryBtnUrl = dbHeroSettings?.primary_button_url || cmsContent.hero.ctaLink || '/menu';
+  const secondaryBtnText = dbHeroSettings?.secondary_button_text || 'Explore Collection';
+  const secondaryBtnUrl = dbHeroSettings?.secondary_button_url || '/menu';
+  const heroImgUrl = dbHeroSettings?.hero_image || cmsContent.hero.bgImageUrl || landingHero;
+  const bgImgUrl = dbHeroSettings?.background_image;
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
@@ -233,11 +255,14 @@ const Landing = () => {
       />
       
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden bg-[#e9dbbe] flex items-center w-full py-8 md:py-12 lg:py-16">
+      <section 
+        className="relative overflow-hidden bg-[#e9dbbe] flex items-center w-full py-8 md:py-12 lg:py-16"
+        style={bgImgUrl ? { backgroundImage: `url(${getOptimizedImageUrl(bgImgUrl)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+      >
         {/* Full width background image (using object-contain to prevent ANY cutting, while keeping height reasonable) */}
         <div className="absolute inset-0 z-0 flex justify-end overflow-hidden pointer-events-none">
           <img 
-            src={cmsContent.hero.bgImageUrl ? getOptimizedImageUrl(cmsContent.hero.bgImageUrl) : landingHero} 
+            src={heroImgUrl} 
             alt="Authentic Flavors of Andhra & Telangana" 
             className="h-full w-auto max-w-none object-contain object-right" 
             loading="eager"
@@ -250,13 +275,18 @@ const Landing = () => {
         <div className="relative z-10 w-full">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="w-full lg:w-[45%] pr-0 lg:pr-8 text-center lg:text-left">
-              <h2 className="text-base md:text-lg lg:text-xl font-serif text-primary mb-1 drop-shadow-sm">Bringing Home</h2>
+              <h2 className="text-base md:text-lg lg:text-xl font-serif text-primary mb-1 drop-shadow-sm">{heroBadge}</h2>
               <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-[1.15] font-serif text-primary mb-3 drop-shadow-sm">
-                {cmsContent.hero.title}
+                {heroTitle}
               </h1>
               <p className="text-sm md:text-base lg:text-lg font-serif text-accent mb-4 lg:mb-6 max-w-md mx-auto lg:mx-0 drop-shadow-sm">
-                {cmsContent.hero.subtitle}
+                {heroSubtitle}
               </p>
+              {heroDesc && (
+                <p className="text-xs md:text-sm text-foreground/80 mb-6 max-w-md mx-auto lg:mx-0 drop-shadow-sm leading-relaxed">
+                  {heroDesc}
+                </p>
+              )}
 
               {/* Feature Icons Grid */}
               <div className="grid grid-cols-4 gap-2 mb-8 max-w-lg mx-auto lg:mx-0">
@@ -288,14 +318,18 @@ const Landing = () => {
 
               {/* Buttons */}
               <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start items-center">
-                <Link to={cmsContent.hero.ctaLink || '/menu'}>
-                  <Button className="bg-primary hover:bg-primary/90 text-white font-medium tracking-widest text-sm px-10 h-14 rounded-none uppercase shadow-md">
-                    {cmsContent.hero.ctaText || 'Shop Now'} <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link to="/menu" className="font-medium tracking-widest text-sm text-foreground hover:text-accent uppercase flex items-center transition-colors drop-shadow-sm">
-                  Explore Collection <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
+                {primaryBtnText && (
+                  <Link to={primaryBtnUrl}>
+                    <Button className="bg-primary hover:bg-primary/90 text-white font-medium tracking-widest text-sm px-10 h-14 rounded-none uppercase shadow-md">
+                      {primaryBtnText} <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                )}
+                {secondaryBtnText && (
+                  <Link to={secondaryBtnUrl} className="font-medium tracking-widest text-sm text-foreground hover:text-accent uppercase flex items-center transition-colors drop-shadow-sm">
+                    {secondaryBtnText} <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                )}
               </div>
             </div>
           </div>

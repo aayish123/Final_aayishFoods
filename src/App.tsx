@@ -13,43 +13,60 @@ import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
-const Landing = React.lazy(() => import("@/pages/Landing"));
-const Auth = React.lazy(() => import("@/pages/Auth"));
-const ResetPassword = React.lazy(() => import("@/pages/ResetPassword"));
-const Menu = React.lazy(() => import("@/modules/products/Menu"));
-const FoodItem = React.lazy(() => import("@/modules/products/FoodItem"));
-const Dashboard = React.lazy(() => import("@/pages/Dashboard"));
-const Cart = React.lazy(() => import("@/pages/Cart"));
-const Address = React.lazy(() => import("@/pages/Address"));
-const Payment = React.lazy(() => import("@/modules/orders/Payment"));
-const Orders = React.lazy(() => import("@/modules/orders/Orders"));
-const About = React.lazy(() => import("@/pages/About"));
-const Offers = React.lazy(() => import("@/pages/Offers"));
-const Wishlist = React.lazy(() => import("@/modules/products/Wishlist"));
-const AdminLayout = React.lazy(() => import("@/components/admin/AdminLayout"));
-const AdminDashboard = React.lazy(() => import("@/modules/dashboard/admin/Dashboard"));
-const AdminProducts = React.lazy(() => import("@/modules/products/admin/Products"));
-const AdminProductForm = React.lazy(() => import("@/modules/products/admin/ProductForm"));
-const AdminCategories = React.lazy(() => import("@/modules/categories/admin/Categories"));
-const AdminMedia = React.lazy(() => import("@/modules/media/admin/Media"));
-const AdminOrders = React.lazy(() => import("@/modules/orders/admin/Orders"));
-const AdminOrderDetail = React.lazy(() => import("@/modules/orders/admin/OrderDetail"));
-const AdminFulfillment = React.lazy(() => import("@/modules/orders/admin/Fulfillment"));
-const AdminCustomers = React.lazy(() => import("@/modules/customers/admin/Customers"));
-const AdminCustomerDetail = React.lazy(() => import("@/modules/customers/admin/CustomerDetail"));
-const AdminReviews = React.lazy(() => import("@/modules/reviews/admin/Reviews"));
-const AdminCoupons = React.lazy(() => import("@/modules/coupons/admin/Coupons"));
-const AdminBanners = React.lazy(() => import("@/modules/marketing/admin/Banners"));
-const AdminInventory = React.lazy(() => import("@/modules/inventory/admin/Inventory"));
-const AdminZones = React.lazy(() => import("@/modules/zones/admin/Zones"));
-const AdminReports = React.lazy(() => import("@/modules/reports/admin/Reports"));
-const AdminSettings = React.lazy(() => import("@/modules/settings/admin/Settings"));
-const AdminUsers = React.lazy(() => import("@/modules/users/admin/Users"));
-const AdminCMS = React.lazy(() => import("@/modules/cms/admin/CMS"));
-const AdminMarketing = React.lazy(() => import("@/modules/marketing/admin/Marketing"));
-const AdminPermissions = React.lazy(() => import("@/modules/users/admin/Permissions"));
-const AdminAuditLogs = React.lazy(() => import("@/modules/audit/admin/AuditLogs"));
-const NotFound = React.lazy(() => import("./pages/NotFound"));
+const lazyWithRetry = (importFunc: () => Promise<{ default: React.ComponentType<any> }>) =>
+  React.lazy(async () => {
+    try {
+      return await importFunc();
+    } catch (error) {
+      console.warn("Failed to fetch dynamically imported module, retrying in 1.5s...", error);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      try {
+        return await importFunc();
+      } catch (retryError) {
+        console.error("Retry failed, reloading page to fetch latest bundle...", retryError);
+        window.location.reload();
+        return new Promise<{ default: React.ComponentType<any> }>(() => {});
+      }
+    }
+  });
+
+const Landing = lazyWithRetry(() => import("@/pages/Landing"));
+const Auth = lazyWithRetry(() => import("@/pages/Auth"));
+const ResetPassword = lazyWithRetry(() => import("@/pages/ResetPassword"));
+const Menu = lazyWithRetry(() => import("@/modules/products/Menu"));
+const FoodItem = lazyWithRetry(() => import("@/modules/products/FoodItem"));
+const Dashboard = lazyWithRetry(() => import("@/pages/Dashboard"));
+const Cart = lazyWithRetry(() => import("@/pages/Cart"));
+const Address = lazyWithRetry(() => import("@/pages/Address"));
+const Payment = lazyWithRetry(() => import("@/modules/orders/Payment"));
+const Orders = lazyWithRetry(() => import("@/modules/orders/Orders"));
+const About = lazyWithRetry(() => import("@/pages/About"));
+const Offers = lazyWithRetry(() => import("@/pages/Offers"));
+const Wishlist = lazyWithRetry(() => import("@/modules/products/Wishlist"));
+const AdminLayout = lazyWithRetry(() => import("@/components/admin/AdminLayout"));
+const AdminDashboard = lazyWithRetry(() => import("@/modules/dashboard/admin/Dashboard"));
+const AdminProducts = lazyWithRetry(() => import("@/modules/products/admin/Products"));
+const AdminProductForm = lazyWithRetry(() => import("@/modules/products/admin/ProductForm"));
+const AdminCategories = lazyWithRetry(() => import("@/modules/categories/admin/Categories"));
+const AdminMedia = lazyWithRetry(() => import("@/modules/media/admin/Media"));
+const AdminOrders = lazyWithRetry(() => import("@/modules/orders/admin/Orders"));
+const AdminOrderDetail = lazyWithRetry(() => import("@/modules/orders/admin/OrderDetail"));
+const AdminFulfillment = lazyWithRetry(() => import("@/modules/orders/admin/Fulfillment"));
+const AdminCustomers = lazyWithRetry(() => import("@/modules/customers/admin/Customers"));
+const AdminCustomerDetail = lazyWithRetry(() => import("@/modules/customers/admin/CustomerDetail"));
+const AdminReviews = lazyWithRetry(() => import("@/modules/reviews/admin/Reviews"));
+const AdminCoupons = lazyWithRetry(() => import("@/modules/coupons/admin/Coupons"));
+const AdminBanners = lazyWithRetry(() => import("@/modules/marketing/admin/Banners"));
+const AdminInventory = lazyWithRetry(() => import("@/modules/inventory/admin/Inventory"));
+const AdminZones = lazyWithRetry(() => import("@/modules/zones/admin/Zones"));
+const AdminReports = lazyWithRetry(() => import("@/modules/reports/admin/Reports"));
+const AdminSettings = lazyWithRetry(() => import("@/modules/settings/admin/Settings"));
+const AdminUsers = lazyWithRetry(() => import("@/modules/users/admin/Users"));
+const AdminCMS = lazyWithRetry(() => import("@/modules/cms/admin/CMS"));
+const AdminMarketing = lazyWithRetry(() => import("@/modules/marketing/admin/Marketing"));
+const AdminPermissions = lazyWithRetry(() => import("@/modules/users/admin/Permissions"));
+const AdminAuditLogs = lazyWithRetry(() => import("@/modules/audit/admin/AuditLogs"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 import { useAuth } from "@/contexts/AuthContext";
 import { SessionTimeoutProvider } from "@/providers/SessionTimeoutProvider";
